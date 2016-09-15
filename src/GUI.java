@@ -77,8 +77,6 @@ public class GUI extends JFrame{
 				
 				JOptionPane.showMessageDialog(null, Result.getError());
 			}
-			
-			
 		}
 	}
 	

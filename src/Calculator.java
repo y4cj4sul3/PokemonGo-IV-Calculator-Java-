@@ -265,10 +265,6 @@ public class Calculator {
         int BStam = Pokemon[ID][0];
         int BAtk = Pokemon[ID][1];
         int BDef = Pokemon[ID][2];
-        //double IVSum = 0.0, MaxIV = 0.0, MinIV = 100.0;
-        //double IVS1 = 0.0, XIV1 = 0.0, NIV1 = 100.0; 
-        //double IVS2 = 0.0, XIV2 = 0.0, NIV2 = 100.0;
-        //int NOP = 0, NOP1 = 0, NOP2 = 0;
         Map<Double, Double> IVS = new HashMap<Double, Double>();
         Map<Double, Double> XIV = new HashMap<Double, Double>();
         Map<Double, Double> NIV = new HashMap<Double, Double>();
@@ -290,7 +286,7 @@ public class Calculator {
                 if(HP == pHP){
                     for(AtkIV = 0; AtkIV < 16; AtkIV++){
                         for(DefIV = 0; DefIV < 16; DefIV++){
-                            int pCP = (int) ((BAtk + AtkIV) * Math.pow(BStam + StamIV, 0.5) * Math.pow(BDef + DefIV, 0.5) * Math.pow(PL, 2) / 10);
+                            int pCP = (int) Math.max((BAtk + AtkIV) * Math.pow(BStam + StamIV, 0.5) * Math.pow(BDef + DefIV, 0.5) * Math.pow(PL, 2) / 10, 10);
                             if(CP == pCP){
                                 //PL1.push_back(vector<int>{StamIV, AtkIV, DefIV});
                                 double IV = (StamIV + AtkIV + DefIV) * 100.0 / 45.0 ;
