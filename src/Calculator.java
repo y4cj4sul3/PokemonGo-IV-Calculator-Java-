@@ -1,5 +1,4 @@
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Calculator {
 	private String result, stats, error;
@@ -157,7 +156,18 @@ public class Calculator {
 			{200, 220, 220}
 
 	};
-	//private final double PokemonLevel[] = {0.0, 0.0, 0.094, 0.135137, 0.166398, 0.192651, 0.215732, 0.236573, 0.25572, 0.27353, 0.29025, 0.306057, 0.321088, 0.335445, 0.349213, 0.362458, 0.375236, 0.387592, 0.399567, 0.411194, 0.4225, 0.432926, 0.443108, 0.45306, 0.462798, 0.472336, 0.481685, 0.490856, 0.499858, 0.508702, 0.517394, 0.525942, 0.534354, 0.542636, 0.550793, 0.558831, 0.566755, 0.574569, 0.582279, 0.589888, 0.5974, 0.604819, 0.612157, 0.619404, 0.626567, 0.633649, 0.640653, 0.647581, 0.654436, 0.661219, 0.667934, 0.674582, 0.681165, 0.687685, 0.694144, 0.700543, 0.706884, 0.713169, 0.719399, 0.725576, 0.7317, 0.734741, 0.737769, 0.740786, 0.743789, 0.746781, 0.749761, 0.752729, 0.755686, 0.75863, 0.761564, 0.764486, 0.767397, 0.770297, 0.773186, 0.776065, 0.778933, 0.78179, 0.784637, 0.787474, 0.7903, 0.793116};
+	private final int Overall[][] = {
+			{45, 37},
+			{36, 30},
+			{29, 23},
+			{22, 0}
+	};
+	private final int Stats[][] = {
+			{15, 15},
+			{14, 13},
+			{12, 8},
+			{7, 0}
+	};
 	private Map<Double, Double> PokemonLevel = new HashMap<Double, Double>(){
 		{
 			put(1.0, 0.094);
@@ -244,7 +254,7 @@ public class Calculator {
 		}
 	};
 	
-	public boolean calculate(int ID, int CP, int HP, int SD, boolean PU, boolean Stam, boolean Atk, boolean Def){
+	public boolean calculate(int ID, int CP, int HP, int SD, boolean PU){
 		result = "";
 		stats = "";
 		error = "";
@@ -269,7 +279,7 @@ public class Calculator {
         Map<Double, Double> XIV = new HashMap<Double, Double>();
         Map<Double, Double> NIV = new HashMap<Double, Double>();
         Map<Double, Integer> NOP = new HashMap<Double, Integer>();
-        //list<vector<int>> PL1, PL2;
+        
         int TNOP = 0;
         double MaxIV = 0.0;
         double MinIV = 100.0;
@@ -288,6 +298,92 @@ public class Calculator {
                         for(DefIV = 0; DefIV < 16; DefIV++){
                             int pCP = (int) Math.max((BAtk + AtkIV) * Math.pow(BStam + StamIV, 0.5) * Math.pow(BDef + DefIV, 0.5) * Math.pow(PL, 2) / 10, 10);
                             if(CP == pCP){
+                                double IV = (StamIV + AtkIV + DefIV) * 100.0 / 45.0 ;
+                                IVS.replace(LV, IVS.get(LV) + IV);
+                                if(IV > XIV.get(LV)) XIV.replace(LV, IV);
+                                if(IV < NIV.get(LV)) NIV.replace(LV, IV);
+                                NOP.replace(LV, NOP.get(LV) + 1);
+                                stats += String.format("\n\t%d\t%d\t%d\t%d\t%.1f%%", (int)LV, StamIV, AtkIV, DefIV, IV);
+                            }
+                        }
+                    }
+                }
+            }
+            TNOP += NOP.get(LV);
+            if(MaxIV < XIV.get(LV)) MaxIV = XIV.get(LV);
+            if(MinIV > NIV.get(LV)) MinIV = NIV.get(LV);
+            IVSum += IVS.get(LV);
+        }
+
+        if(TNOP == 0){
+        	error = "No matching! Check your CP and HP";
+            return false;
+        }else{
+            result += String.format("\n\t\t%d\t%.1f\t%.1f\t%.1f\t", TNOP, MaxIV, IVSum / TNOP, MinIV);
+            for(double LV = level; LV < level+2; LV += PU? 0.5 : 1.0){
+            	if(NOP.get(LV) != 0){
+            		result += String.format("\n\t%.1f\t%d\t%.1f\t%.1f\t%.1f\t", LV, NOP.get(LV), XIV.get(LV), IVS.get(LV) / NOP.get(LV), NIV.get(LV));
+            	}
+            }
+        }
+        
+		return true;
+	}
+	
+	public boolean calculateAdvance(int ID, int CP, int HP, int SD, boolean PU, int OVC, boolean Stam, boolean Atk, boolean Def, int SC){
+		result = "";
+		stats = "";
+		error = "";
+		
+		//calculate
+		int level;
+        if(SD <= 1000){
+            level = (SD-200)/100+1;
+        }else if(SD <= 2500){
+            level = (SD-1000)/150+9;
+        }else if(SD <= 5000){
+            level = (SD-2500)/250+19;
+        }else{
+            level = (SD-5000)/500+29;
+        }
+		
+        int StamIV, AtkIV, DefIV;
+        int BStam = Pokemon[ID][0];
+        int BAtk = Pokemon[ID][1];
+        int BDef = Pokemon[ID][2];
+        Map<Double, Double> IVS = new HashMap<Double, Double>();
+        Map<Double, Double> XIV = new HashMap<Double, Double>();
+        Map<Double, Double> NIV = new HashMap<Double, Double>();
+        Map<Double, Integer> NOP = new HashMap<Double, Integer>();
+        
+        //list<vector<int>> PL1, PL2;
+        //Vector<Vector<Integer>> v = new Vector<Vector<Integer>>();
+        int TNOP = 0;
+        double MaxIV = 0.0;
+        double MinIV = 100.0;
+        double IVSum = 0.0;
+        
+        for(double LV = level; LV < level+2; LV += PU? 0.5 : 1.0){
+        	IVS.put(LV, 0.0);
+        	XIV.put(LV, 0.0);
+        	NIV.put(LV, 100.0);
+        	NOP.put(LV, 0);
+        	//Vector<>
+        	double PL = PokemonLevel.get(LV);
+            for(StamIV = 0; StamIV < 16; StamIV++){
+                int pHP = (int) Math.max((BStam + StamIV) * PL, 10);
+                if(HP == pHP){
+                    for(AtkIV = 0; AtkIV < 16; AtkIV++){
+                        for(DefIV = 0; DefIV < 16; DefIV++){
+                            int pCP = (int) Math.max((BAtk + AtkIV) * Math.pow(BStam + StamIV, 0.5) * Math.pow(BDef + DefIV, 0.5) * Math.pow(PL, 2) / 10, 10);
+                            int SAD = StamIV + AtkIV + DefIV;
+                            if(CP == pCP && SAD <= Overall[OVC][0] && SAD >= Overall[OVC][1] &&
+                            (((Stam && StamIV >= AtkIV && StamIV >= DefIV && StamIV <= Stats[SC][0] && StamIV >= Stats[SC][1]) ||
+                            (!Stam && (StamIV < AtkIV || StamIV < DefIV))) &&
+                            ((Atk && AtkIV >= StamIV && AtkIV >= DefIV && AtkIV <= Stats[SC][0] && AtkIV >= Stats[SC][1]) ||
+                            (!Atk && (AtkIV < StamIV || AtkIV < DefIV))) &&
+                            ((Def && DefIV >= StamIV && DefIV >= StamIV && DefIV <= Stats[SC][0] && DefIV >= Stats[SC][1]) ||
+                            (!Def && (DefIV < StamIV || DefIV < AtkIV))))){
                                 //PL1.push_back(vector<int>{StamIV, AtkIV, DefIV});
                                 double IV = (StamIV + AtkIV + DefIV) * 100.0 / 45.0 ;
                                 IVS.replace(LV, IVS.get(LV) + IV);
